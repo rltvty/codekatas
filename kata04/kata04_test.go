@@ -11,6 +11,12 @@ func TestWeather(t *testing.T) {
 	}
 }
 
+func TestTeam(t *testing.T) {
+	if team() != "Aston_Villa" {
+		t.Error("found incorrect team with the least goals difference")
+	}
+}
+
 func TestGetColumns(t *testing.T) {
 	row := " 9  86    32*   59       6  61.5       0.00         240  7.6 220  12  6.0  78 46 1018.6"
 	query := []int{1, 2}

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math"
 	"os"
 	"strconv"
 	"strings"
@@ -36,6 +37,32 @@ func weather() string {
 		}
 	}
 	return maxDiffDay
+}
+
+func team() string {
+	minDiff := 100000.0
+	minDiffTeam := ""
+
+	for i, columns := range getDataFromFile("./football.dat", []int{1, 6, 8}) {
+		if i == 0 {
+			continue //skip header row
+		}
+		goalsFor, err := strconv.Atoi(columns[1])
+		if err != nil {
+			fmt.Printf("Could not convert %v to int\n", columns[1])
+			continue
+		}
+		goalsAgainst, err := strconv.Atoi(columns[2])
+		if err != nil {
+			fmt.Printf("Could not convert %v to int\n", columns[2])
+			continue
+		}
+		if diff := math.Abs(float64(goalsFor) - float64(goalsAgainst)); diff < minDiff {
+			minDiff = diff
+			minDiffTeam = columns[0]
+		}
+	}
+	return minDiffTeam
 }
 
 func getDataFromFile(filename string, columns []int) [][]string {
