@@ -6,7 +6,7 @@ import (
 )
 
 func TestWeather(t *testing.T) {
-	if Weather() != 9 {
+	if weather() != "9" {
 		t.Error("found incorrect day with the largest temperature span")
 	}
 }
