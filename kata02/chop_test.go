@@ -2,11 +2,12 @@ package kata02
 
 import "testing"
 
-func TestChop1(t *testing.T) {
+func TestChops(t *testing.T) {
 	emptyHaystack := []int{}
 	tinyHaystack := []int{1}
 	smallHaystack := []int{1, 3, 5}
 	medHaystack := []int{1, 3, 5, 7}
+	largeHaystack := []int{1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 22, 24, 26, 28, 29, 30, 34, 35, 38, 39, 100}
 
 	tables := []struct {
 		needle   int
@@ -27,12 +28,22 @@ func TestChop1(t *testing.T) {
 		{7, medHaystack, 3},
 		{0, medHaystack, -1},
 		{8, medHaystack, -1},
+		{7, largeHaystack, 3},
+		{19, largeHaystack, 9},
+		{35, largeHaystack, 18},
+		{99, largeHaystack, -1},
+		{101, largeHaystack, -1},
 	}
 
-	for _, table := range tables {
-		result := Chop1(table.needle, table.haystack)
-		if result != table.result {
-			t.Errorf("Chop1 of (%v) in (%v) was incorrect, got: %v, want: %v.", table.needle, table.haystack, result, table.result)
+	chops := []Chop{Chop1, Chop2}
+
+	for i, chop := range chops {
+		for _, table := range tables {
+			result := chop(table.needle, table.haystack)
+			if result != table.result {
+				t.Errorf("Chop%d of (%v) in (%v) was incorrect, got: %v, want: %v.", i+1, table.needle, table.haystack, result, table.result)
+			}
 		}
 	}
+
 }
