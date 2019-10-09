@@ -32,50 +32,74 @@ func splitHash(hash string, bitsPerSection int) []uint16 {
 	if hash == "" {
 		return []uint16{}
 	}
+	bitsInHash := len(hash) * 4
+	outputLength := int(math.Ceil(float64(bitsInHash) / float64(bitsPerSection)))
 
-	decoded, err := hex.DecodeString(hash)
-	if err != nil {
-		log.Fatal(err)
-	}
-	inMap := bitmap.TSFromData(decoded, true)
+	inMap := getBitmap(hash)
 	outMap := bitmap.NewTS(bitsPerSection)
 
-	outputLength := int(math.Ceil(float64(len(hash)*4) / float64(bitsPerSection)))
-	fmt.Printf("Guessing that outputLength is %v\n", outputLength)
 	output := make([]uint16, outputLength)
 	inLoc, outLoc := 0, 0
 	for {
-		outMap.Set(outLoc, inMap.Get(inLoc))
+		outMap.Set(outLoc, inMap[bitsInHash-inLoc-1])
 
 		if outLoc++; outLoc >= bitsPerSection {
 			outLoc = 0
 			setOutput(&output, outMap, inLoc, bitsPerSection)
-			fmt.Printf("resetting outmap\n")
 			outMap = bitmap.NewTS(bitsPerSection)
 		}
 
-		if inLoc++; inLoc >= len(decoded)*8 {
-			fmt.Printf("at end of input, quitting FOR loop\n")
+		if inLoc++; inLoc >= bitsInHash {
 			if outLoc > 0 {
-				fmt.Printf("Outputing LEFTOVER data:\n")
 				setOutput(&output, outMap, inLoc, bitsPerSection)
 			}
 			break
 		}
 	}
-
 	return output
 }
 
 func setOutput(output *[]uint16, outMap *bitmap.Threadsafe, inLoc int, bitsPerSection int) {
-	fmt.Printf("Trying to get outData from outMap\n")
 	outData := outMap.Data(false)
-	fmt.Printf("Initial outData: %v\n", outData)
 	for len(outData) < 2 {
 		outData = append(outData, 0)
 	}
-	fmt.Printf("Trying to get outValue from outData: %v\n", outData)
 	outValue := binary.LittleEndian.Uint16(outData)
-	fmt.Printf("Trying to set outValue: %v to output array at location: %v\n", outValue, inLoc/bitsPerSection)
 	(*output)[inLoc/bitsPerSection] = outValue
+}
+
+func reverseBytes(s []byte) []byte {
+	first := 0
+	last := len(s) - 1
+	for first < last {
+		s[first], s[last] = s[last], s[first]
+		first++
+		last--
+	}
+	return s
+}
+
+func getBitmap(hash string) []bool {
+	if hash == "" {
+		return []bool{}
+	}
+	bitsInHash := len(hash) * 4
+
+	if len(hash)%2 == 1 {
+		hash = fmt.Sprintf("0%s", hash)
+	}
+
+	decoded, err := hex.DecodeString(hash)
+	if err != nil {
+		log.Fatal(err)
+	}
+	decoded = reverseBytes(decoded)
+	inMap := bitmap.TSFromData(decoded, true)
+
+	output := make([]bool, bitsInHash)
+	for i := 0; i < bitsInHash; i++ {
+		output[i] = inMap.Get(bitsInHash - i - 1)
+	}
+
+	return output
 }
