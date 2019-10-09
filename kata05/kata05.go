@@ -1,12 +1,15 @@
 package kata05
 
 import (
+	"bufio"
 	"crypto/md5"
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+	"io"
 	"log"
 	"math"
+	"os"
 
 	"github.com/boljen/go-bitmap"
 )
@@ -23,9 +26,50 @@ Play with using different numbers of hashes, and with different bitmap sizes.
 
 const bitmapLength = 256
 
-func getHash(word string) [md5.Size]byte {
+func populateBloomFilter(bitsPerSection int) []bool {
+	file, err := os.Open("./wordlist.txt")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	output := make([]bool, int(math.Exp2(float64(bitsPerSection))))
+
+	fileReader := bufio.NewReader(file)
+	keepReading := true
+
+	for keepReading {
+		line, err := fileReader.ReadString('\n')
+		if err != nil {
+			if err == io.EOF {
+				keepReading = false
+			} else {
+				log.Fatal(err)
+			}
+		}
+
+		flags := splitHash(getHash(line), bitsPerSection)
+		for _, v := range flags {
+			output[v] = true
+		}
+	}
+
+	return output
+}
+
+func spellCheck(bloomFilter []bool, word string, bitsPerSection int) bool {
+	flags := splitHash(getHash(word), bitsPerSection)
+	for _, v := range flags {
+		if bloomFilter[v] == false {
+			return false
+		}
+	}
+	return true
+}
+
+func getHash(word string) string {
 	data := []byte(word)
-	return md5.Sum(data)
+	return fmt.Sprintf("%x", md5.Sum(data))
 }
 
 func splitHash(hash string, bitsPerSection int) []uint16 {

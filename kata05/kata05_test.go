@@ -93,3 +93,45 @@ func TestReverseByes(t *testing.T) {
 		}
 	}
 }
+
+func TestGetHash(t *testing.T) {
+	tables := []struct {
+		in     string
+		result string
+	}{
+		{"one", "f97c5d29941bfb1b2fdab0874906ab82"},
+		{"two", "b8a9f715dbb64fd5c56e7783c6820a61"},
+		{"three", "35d6d33467aae9a2e3dccb4b6b027878"},
+	}
+
+	for _, table := range tables {
+		result := getHash(table.in)
+		if result != table.result {
+			t.Errorf("getHash of %v was incorrect, got: %v, want: %v.", table.in, result, table.result)
+		} else {
+			fmt.Printf("PASS\n")
+		}
+	}
+}
+
+func TestSpellCheck(t *testing.T) {
+	tables := []struct {
+		word  string
+		valid bool
+	}{
+		{"tomato", true},
+		{"tomatoe", false},
+	}
+
+	bitsPerSection := 9
+	bloomFilter := populateBloomFilter(bitsPerSection)
+
+	for _, table := range tables {
+		result := spellCheck(bloomFilter, table.word, bitsPerSection)
+		if !result {
+			t.Errorf("SpellCheck is not correct for %v.  expected %v got %v", table.word, result, table.valid)
+		} else {
+			fmt.Printf("PASS\n")
+		}
+	}
+}
