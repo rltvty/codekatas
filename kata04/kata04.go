@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"math"
 	"os"
@@ -74,17 +75,25 @@ func getDataFromFile(filename string, columns []int) [][]string {
 
 	output := make([][]string, 0)
 
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		columns, err := getColumns(scanner.Text(), columns, "*")
+	fileReader := bufio.NewReader(file)
+	keepReading := true
+
+	for keepReading {
+		line, err := fileReader.ReadString('\n')
+		if err != nil {
+			if err == io.EOF {
+				keepReading = false
+			} else {
+				log.Fatal(err)
+			}
+		}
+
+		columns, err := getColumns(line, columns, "*")
 		if err == nil {
 			output = append(output, columns)
 		}
 	}
 
-	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
-	}
 	return output
 }
 
